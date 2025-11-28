@@ -41,14 +41,15 @@ def read_root():
             "get_students": "GET /students/", 
             "get_by_class": "GET /students/standard/{standard}",
             "update_student": "PUT /students/{student_id}",
-            "delete_student": "DELETE /students/{standard}?student_name=NAME"
+            "delete_by_class_name": "DELETE /students/{standard}?student_name=NAME",
+            "delete_by_id": "DELETE /students/id/{student_id}"
         }
     }
 
 # CREATE Student
 @app.post("/students/")
 def create_student(student: StudentCreate):
-    if student.standard not in range(1, 11):  # 1 to 10
+    if student.standard not in range(1, 11):
         raise HTTPException(status_code=400, detail="Standard must be between 1 and 10")
     
     conn = get_db()
@@ -74,7 +75,7 @@ def get_all_students():
 # GET Students by Class
 @app.get("/students/standard/{standard}")
 def get_students_by_class(standard: int):
-    if standard not in range(1, 11):  # 1 to 10
+    if standard not in range(1, 11):
         raise HTTPException(status_code=400, detail="Standard must be between 1 and 10")
     
     conn = get_db()
@@ -89,7 +90,7 @@ def get_students_by_class(standard: int):
 # UPDATE Student
 @app.put("/students/{student_id}")
 def update_student(student_id: int, student: StudentCreate):
-    if student.standard not in range(1, 11):  # 1 to 10
+    if student.standard not in range(1, 11):
         raise HTTPException(status_code=400, detail="Standard must be between 1 and 10")
     
     conn = get_db()
@@ -107,10 +108,10 @@ def update_student(student_id: int, student: StudentCreate):
     
     return {"message": "Student updated successfully"}
 
-# DELETE Student
+# DELETE Student by CLASS and NAME
 @app.delete("/students/{standard}")
-def delete_student(standard: int, student_name: str = Query(...)):
-    if standard not in range(1, 11):  # 1 to 10
+def delete_student_by_class_and_name(standard: int, student_name: str = Query(...)):
+    if standard not in range(1, 11):
         raise HTTPException(status_code=400, detail="Standard must be between 1 and 10")
     
     conn = get_db()
@@ -127,3 +128,21 @@ def delete_student(standard: int, student_name: str = Query(...)):
         raise HTTPException(status_code=404, detail="Student not found in this class")
     
     return {"message": f"Student {student_name} from Standard {standard} deleted successfully"}
+
+# DELETE Student by ID
+@app.delete("/students/id/{student_id}")
+def delete_student_by_id(student_id: int):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM students WHERE id = ?",
+        (student_id,)
+    )
+    conn.commit()
+    deleted = cursor.rowcount
+    conn.close()
+    
+    if deleted == 0:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    return {"message": f"Student with ID {student_id} deleted successfully"}
