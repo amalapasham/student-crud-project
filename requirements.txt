@@ -1,0 +1,2 @@
+echo "pytest>=7.0.0" >> requirements.txt
+echo "pytest-asyncio>=0.21.0" >> requirements.txt
